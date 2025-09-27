@@ -1,10 +1,12 @@
 import io, os, sqlite3
 import streamlit as st
 
+# Configuración de la página
 st.set_page_config(page_title="Demo: Pruebas Unitarias e Integración en Python", layout="wide")
 st.title("🧪 Demo Didáctica: Pruebas Unitarias e Integración en Python")
 st.caption("Hecha con Streamlit · unittest + SQLite · con laboratorio interactivo")
 
+# Menú lateral
 st.sidebar.header("Navegación")
 choice = st.sidebar.radio(
     "Secciones",
@@ -20,14 +22,17 @@ choice = st.sidebar.radio(
     index=0
 )
 
+# Rutas de proyecto
 project_root = os.path.dirname(__file__)
 src_dir = os.path.join(project_root, "src")
 tests_dir = os.path.join(project_root, "tests")
 
+# Función para leer archivos
 def read_file(path: str) -> str:
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
 
+# Sección Introducción
 if choice == "Introducción":
     st.subheader("¿Qué veremos?")
     st.markdown(
@@ -50,12 +55,14 @@ if choice == "Introducción":
     )
     st.info("Usa el menú lateral para explorar el código y ejecutar pruebas.")
 
+# Sección Código de ejemplo
 elif choice == "Código de ejemplo (src)":
     st.subheader("Módulos de ejemplo")
     file = st.selectbox("Selecciona un archivo", ["calculator.py", "repository.py", "service.py"])
     path = os.path.join(src_dir, file)
     st.code(read_file(path), language="python")
 
+# Sección Pruebas unitarias
 elif choice == "Pruebas unitarias":
     st.subheader("Ejecutar pruebas **unitarias**")
     st.write("Archivo: `tests/test_unit_calculator.py`")
@@ -71,6 +78,7 @@ elif choice == "Pruebas unitarias":
         st.text(stream.getvalue())
         st.success(f"OK: {result.wasSuccessful()} — Tests: {result.testsRun} · Fallos: {len(result.failures)} · Errores: {len(result.errors)}")
 
+# Sección Pruebas de integración
 elif choice == "Pruebas de integración":
     st.subheader("Ejecutar pruebas de **integración**")
     st.write("Archivo: `tests/test_integration_vehicle.py` (usa SQLite en memoria + capas repo/servicio)")
@@ -86,6 +94,7 @@ elif choice == "Pruebas de integración":
         st.text(stream.getvalue())
         st.success(f"OK: {result.wasSuccessful()} — Tests: {result.testsRun} · Fallos: {len(result.failures)} · Errores: {len(result.errors)}")
 
+# Sección Laboratorio guiado
 elif choice == "Laboratorio guiado":
     st.subheader("Laboratorio: agrega un caso de prueba")
     st.markdown(
@@ -108,9 +117,16 @@ elif choice == "Laboratorio guiado":
             """, language="python"
         )
 
+# Sección Laboratorio interactivo
 elif choice == "Laboratorio interactivo":
     st.subheader("🧪 Laboratorio interactivo")
     st.markdown("Explora y **modifica valores** para comprender el testing.")
+
+    # Inicializar conexión SQLite en memoria **permitiendo multithread**
+    if "lab_conn" not in st.session_state:
+        st.session_state.lab_conn = sqlite3.connect(":memory:", check_same_thread=False)
+        from src.service import VehicleService
+        st.session_state.lab_service = VehicleService(st.session_state.lab_conn)
 
     # A) Calculadora
     st.markdown("### A) Calculadora (unit tests)")
@@ -164,14 +180,9 @@ class TestAuto(unittest.TestCase):
 
     st.divider()
 
-    # B) Inventario/Integración
+    # B) Inventario de vehículos
     st.markdown("### B) Inventario de Vehículos (integration tests)")
     st.caption("SQLite en memoria + capas reales.")
-
-    if "lab_conn" not in st.session_state:
-        st.session_state.lab_conn = sqlite3.connect(":memory:")
-        from src.service import VehicleService
-        st.session_state.lab_service = VehicleService(st.session_state.lab_conn)
 
     brand = st.text_input("Marca", value="Toyota")
     model = st.text_input("Modelo", value="Corolla")
@@ -191,11 +202,12 @@ class TestAuto(unittest.TestCase):
                 st.session_state.lab_conn.close()
             except Exception:
                 pass
-            st.session_state.lab_conn = sqlite3.connect(":memory:")
+            st.session_state.lab_conn = sqlite3.connect(":memory:", check_same_thread=False)
             from src.service import VehicleService
             st.session_state.lab_service = VehicleService(st.session_state.lab_conn)
             st.warning("BD reiniciada.")
 
+    # Mostrar inventario
     items = st.session_state.lab_service.inventory()
     if items:
         import pandas as pd
@@ -222,6 +234,7 @@ class TestLab(unittest.TestCase):
         self.assertEqual(items[0].year, {int(year)})
 ''', language="python")
 
+# Sección Créditos
 else:
     st.subheader("Créditos")
     st.markdown("Hecho con ❤️ para demostrar buenas prácticas de testing en Python + Streamlit.")
