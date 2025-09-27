@@ -1,5 +1,5 @@
 import io, os, sqlite3
-    import streamlit as st
+import streamlit as st
 
     st.set_page_config(page_title="Demo: Pruebas Unitarias e Integración en Python", layout="wide")
     st.title("🧪 Demo Didáctica: Pruebas Unitarias e Integración en Python")
